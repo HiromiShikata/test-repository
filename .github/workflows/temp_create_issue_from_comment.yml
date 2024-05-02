@@ -8,11 +8,13 @@ jobs:
   create_issue:
     runs-on: ubuntu-latest
     steps:
+      - run: echo ${github.event.comment.body}
       - name: Create Issue
         if: > 
           ${{ github.event_name == 'issue_comment' && 
           github.event.action == 'created' && 
-          startsWith(github.event.comment.body, '/createissue') }}
+          startsWith(github.event.comment.body, '/createissue') &&
+          false }}
         uses: actions/github-script@v6
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
