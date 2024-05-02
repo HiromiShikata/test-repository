@@ -9,7 +9,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: echo "${{github.event.comment.body}}"
-        if: ${{ github.event_name == 'issue_comment' && github.event.action == 'created' && startsWith(github.event.comment.body, '/createissue') }}
       - name: Create Issue
         if: ${{ github.event_name == 'issue_comment' && github.event.action == 'created' && startsWith(github.event.comment.body, '/createissue') }}
         uses: actions/github-script@v6
@@ -32,3 +31,17 @@ jobs:
               title: issueTitle,
               body: issueBody
             });
+      - name: Close Issue
+        if: ${{ github.event_name == 'issue_comment' && github.event.action == 'created' && (contains(github.event.comment.body, '/close') || contains(github.event.comment.body, '/done')) }}
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              state: 'closed'
+            });
+
+
