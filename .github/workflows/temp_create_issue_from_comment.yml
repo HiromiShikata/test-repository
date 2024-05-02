@@ -8,7 +8,7 @@ jobs:
   create_issue:
     runs-on: ubuntu-latest
     steps:
-      - run: echo ${github.event.comment.body}
+      - run: echo ${{github.event.comment.body}}
       - name: Create Issue
         if: > 
           ${{ github.event_name == 'issue_comment' && 
