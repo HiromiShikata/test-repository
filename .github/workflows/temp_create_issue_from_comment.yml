@@ -16,12 +16,13 @@ jobs:
           script: |
             const issueTitle = context.payload.comment.body.slice(12).split('\n')[0].trim();
             const issueNumber = context.issue.number;
-            const issueLink = `https://github.com/${context.repo.owner}/${context.repo.repo}/issues/${issueNumber}`;
+            const commentId = context.payload.comment.id;
+            const commentLink = `https://github.com/${context.repo.owner}/${context.repo.repo}/issues/${issueNumber}#issuecomment-${commentId}`;
             const issueBody = `
               ${context.payload.comment.body.slice(12).trim()}
 
               
-              Created from a comment: ${issueLink}
+              Created from a comment: ${commentLink}
             `;
             const newIssue = await github.rest.issues.create({
               owner: context.repo.owner,
