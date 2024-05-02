@@ -11,11 +11,7 @@ jobs:
       - run: echo "${{github.event.comment.body}}"
         if: ${{ github.event_name == 'issue_comment' && github.event.action == 'created' && startsWith(github.event.comment.body, '/createissue') }}
       - name: Create Issue
-        if: > 
-          ${{ github.event_name == 'issue_comment' && 
-          github.event.action == 'created' && 
-          startsWith(github.event.comment.body, '/createissue') &&
-          false }}
+        if: ${{ github.event_name == 'issue_comment' && github.event.action == 'created' && startsWith(github.event.comment.body, '/createissue') }}
         uses: actions/github-script@v6
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
