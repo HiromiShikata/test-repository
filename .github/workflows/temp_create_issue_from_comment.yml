@@ -18,7 +18,10 @@ jobs:
             const issueNumber = context.issue.number;
             const issueLink = `https://github.com/${context.repo.owner}/${context.repo.repo}/issues/${issueNumber}`;
             const issueBody = `
-              Created from a comment: ${context.payload.comment.body}
+              ${context.payload.comment.body.slice(12).trim()}
+
+              
+              Created from a comment: ${issueLink}
             `;
             const newIssue = await github.rest.issues.create({
               owner: context.repo.owner,
