@@ -1,0 +1,27 @@
+name: Create Issue on Comment
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  create_issue:
+    if: startsWith(github.event.comment.body, '/createissue')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Issue
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            const issueTitle = context.payload.comment.body.slice(12).trim();
+            const issueLink = `https://github.com/${context.repo.owner}/${context.repo.repo}/issues/${issueNumber}`;
+            const issueBody = `
+              Created from a comment: ${context.payload.comment.body}
+            `;
+            const newIssue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: issueTitle,
+              body: issueBody
+            });
