@@ -14,7 +14,7 @@ jobs:
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
-            const issueTitle = context.payload.comment.body.slice(12).trim();
+            const issueTitle = context.payload.comment.body.slice(12).split('\n')[0].trim();
             const issueNumber = context.issue.number;
             const issueLink = `https://github.com/${context.repo.owner}/${context.repo.repo}/issues/${issueNumber}`;
             const issueBody = `
