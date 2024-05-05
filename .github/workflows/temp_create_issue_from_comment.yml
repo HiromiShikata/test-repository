@@ -4,6 +4,16 @@ on:
   issue_comment:
     types: [created]
 
+
+env:
+  unread: Unread
+  in_progress: In Progress
+  gh_project_token: ${{ secrets.GH_TOKEN }}
+  user: HiromiShikata
+  project_id: 48
+  project_v2_id: PVT_kwHOAGJHa84AFWnr
+  field_id: PVTF_lAHOAGJHa84AFWnrzgIk_H0
+
 jobs:
   create_issue:
     runs-on: ubuntu-latest
