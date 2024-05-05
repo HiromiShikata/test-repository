@@ -44,4 +44,16 @@ jobs:
               state: 'closed'
             });
 
-
+      - name: Update Date Field
+        if: ${{ github.event_name == 'issue_comment' && github.event.action == 'created' && startsWith(github.event.comment.body, '/movenextactiondateto') }}
+        run: |
+          DATE_STRING=$(echo "${{ github.event.comment.body }}" | grep -oP '(?<=/movenextactiondateto )\d{8}')
+          OWNER=$(echo ${{ github.repository }} | cut -d '/' -f 1)
+          REPO=$(echo ${{ github.repository }} | cut -d '/' -f 2)
+          ITEM_ID=$(curl -X POST -H "Authorization: bearer ${{ secrets.GH_TOKEN }}" -H "Content-Type: application/json" --data '{ "query": "query { repository(owner: \"'$OWNER'\", name: \"'$REPO'\") { issue(number: '${{ github.event.issue.number }}') { projectItems(first: 10) { nodes { id } } } } }" }' https://api.github.com/graphql | jq -r '.data.repository.issue.projectItems.nodes[0].id')
+          UPDATE_FIELD_DATA="{\"query\":\"mutation { updateProjectV2ItemFieldValue(input: {projectId: \\\"${{ env.project_v2_id }}\\\", fieldId: \\\"${{ env.field_id }}\\\", itemId: \\\"$ITEM_ID\\\", value: { date: \\\"$DATE_STRING\\\" }}) { clientMutationId }}\"}"
+          curl --request POST \
+            --url https://api.github.com/graphql \
+            --header "Authorization: Bearer ${{ env.gh_project_token }}" \
+            --header "Content-Type: application/json" \
+            --data "$UPDATE_FIELD_DATA"
