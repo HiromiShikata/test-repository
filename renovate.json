@@ -1,0 +1,29 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:base"],
+  "automerge": true,
+  "platformAutomerge": true,
+  "rebaseWhen": "auto",
+  "prConcurrentLimit": 2,
+  "schedule": ["every weekend"],
+  "ignorePresets": [],
+  "dependencyDashboard": false,
+  "branchConcurrentLimit": 2,
+  "ignorePaths": ["**/generated/*", "**/_gen/*"],
+  "packageRules": [
+    {
+      "matchPackagePatterns": ["*"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "all non-major dependencies",
+      "groupSlug": "all-minor-patch"
+    },
+    {
+      "matchPackageNames": ["eslint"],
+      "allowedVersions": "<9.0.0"
+    },
+    {
+      "matchPackageNames": ["eslint-plugin-unused-imports"],
+      "allowedVersions": "<4.0.0"
+    }
+  ]
+}
