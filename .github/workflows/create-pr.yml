@@ -10,11 +10,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set branch name as output
         id: branch_name
-        run: echo "::set-output name=branch::${GITHUB_REF#refs/heads/}"
+        run: echo "branch=${GITHUB_REF#refs/heads/}" >> "$GITHUB_OUTPUT"
 
       - name: Create Pull Request
         id: create_pr
@@ -24,8 +24,10 @@ jobs:
           destination_branch: 'main'
           source_branch: ''
           pr_title: '${{ steps.branch_name.outputs.branch }}'
-          pr_body: 'This is an auto-create PR.'
-          draft: false
+          pr_body: |
+            :magic_wand: :sparkles:
+
+          pr_draft: false
 
       - name: Assign PR to author
         if: steps.create_pr.outputs.pr_number
@@ -42,7 +44,7 @@ jobs:
         run: |
           PR_DATA=$(curl -s -H "Authorization: token ${{ secrets.GH_TOKEN }}" -H "Accept: application/vnd.github.v3+json" "https://api.github.com/repos/${{ github.repository }}/pulls/${{ steps.create_pr.outputs.pr_number }}")
           PR_ID=$(echo "$PR_DATA" | jq -r '.node_id')
-          echo "::set-output name=node_id::$PR_ID"
+          echo "node_id=$PR_ID" >> "$GITHUB_OUTPUT"
 
       - name: Enable Auto Merge for PR
         if: steps.create_pr.outputs.pr_number
