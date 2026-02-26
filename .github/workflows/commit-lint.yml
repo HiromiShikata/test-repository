@@ -20,20 +20,12 @@ jobs:
       contents: read
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Use Node.js
-        uses: actions/setup-node@v4
-
-      - name: Install commitlint
-        run: |
-          npm install --save-dev @commitlint/{config-conventional,cli}
-
-      - name: Lint commits
-        run: |
-          npx commitlint --from=origin/main --to=HEAD --config ./.github/workflows/configs/commitlint.config.js
+        uses: actions/setup-node@v6
 
       - name: Check for DONTMERGE
         run: |
@@ -52,3 +44,9 @@ jobs:
         with:
           exclude-branches: 'release/**, dependabot/**, project-common/**'
           loose-matching: true
+      - name: Install commitlint
+        run: |
+          npm install --save-dev @commitlint/{config-conventional,cli}
+      - name: Lint commits
+        run: |
+          npx commitlint --from=origin/main --to=HEAD --config ./.github/workflows/configs/commitlint.config.js
