@@ -18,6 +18,7 @@ module.exports = {
         'test',
         'autogen',
         'prep',
+        'adapt',
       ],
     ],
     'header-max-length': [0],
