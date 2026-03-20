@@ -12,10 +12,24 @@
   "ignorePaths": ["**/generated/*", "**/_gen/*"],
   "packageRules": [
     {
-      "matchPackagePatterns": ["*"],
-      "matchUpdateTypes": ["minor", "patch"],
-      "groupName": "all non-major dependencies",
-      "groupSlug": "all-minor-patch"
+      "matchPackageNames": ["eslint"],
+      "allowedVersions": "<9.0.0"
+    },
+    {
+      "matchPackageNames": ["@typescript-eslint/eslint-plugin"],
+      "allowedVersions": "<6.0.0"
+    },
+    {
+      "matchPackageNames": ["@typescript-eslint/parser"],
+      "allowedVersions": "<6.0.0"
+    },
+    {
+      "matchPackageNames": ["eslint-plugin-unused-imports"],
+      "allowedVersions": "<4.0.0"
+    },
+    {
+      "matchPackageNames": ["@google/clasp"],
+      "allowedVersions": "3.1.0"
     }
   ]
 }
