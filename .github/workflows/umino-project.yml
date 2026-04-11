@@ -103,7 +103,7 @@ jobs:
 
       - name: Create Issue
         if: ${{ github.event_name == 'issue_comment' && github.event.action == 'created' && contains(github.event.comment.body, '/createissue') }}
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           github-token: ${{secrets.GH_TOKEN}}
           script: |
@@ -126,7 +126,7 @@ jobs:
             });
       - name: Close Issue
         if: ${{ github.event_name == 'issue_comment' && github.event.action == 'created' && (contains(github.event.comment.body, '/close') || contains(github.event.comment.body, '/done')) }}
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           github-token: ${{secrets.GH_TOKEN}}
           script: |
@@ -152,7 +152,7 @@ jobs:
             --data "$UPDATE_FIELD_DATA"
       - name: Change Assignee
         if: ${{ github.event_name == 'issue_comment' && github.event.action == 'created' && contains(github.event.comment.body, '/changeassignee ') }}
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           github-token: ${{secrets.GH_TOKEN}}
           script: |
