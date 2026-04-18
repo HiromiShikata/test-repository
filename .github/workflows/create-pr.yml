@@ -16,8 +16,17 @@ jobs:
         id: branch_name
         run: echo "branch=${GITHUB_REF#refs/heads/}" >> "$GITHUB_OUTPUT"
 
+      - name: Check if PR already exists
+        id: check_pr
+        run: |
+          EXISTING_PR=$(gh pr list --head "${{ steps.branch_name.outputs.branch }}" --base main --json number --jq '.[0].number // empty')
+          echo "existing_pr=$EXISTING_PR" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
       - name: Create Pull Request
         id: create_pr
+        if: steps.check_pr.outputs.existing_pr == ''
         uses: repo-sync/pull-request@v2
         with:
           github_token: ${{ secrets.GH_TOKEN }}
@@ -29,25 +38,36 @@ jobs:
 
           pr_draft: false
 
+      - name: Resolve PR number
+        id: resolve_pr
+        run: |
+          PR_NUMBER="${{ steps.create_pr.outputs.pr_number }}"
+          if [ -z "$PR_NUMBER" ]; then
+            PR_NUMBER="${{ steps.check_pr.outputs.existing_pr }}"
+          fi
+          echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
       - name: Assign PR to author
-        if: steps.create_pr.outputs.pr_number
+        if: steps.resolve_pr.outputs.pr_number
         run: |
           curl -s -X POST \
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github.v3+json" \
             -d '{"assignees":["${{ github.actor }}"]}' \
-            "https://api.github.com/repos/${{ github.repository }}/issues/${{ steps.create_pr.outputs.pr_number }}/assignees"
+            "https://api.github.com/repos/${{ github.repository }}/issues/${{ steps.resolve_pr.outputs.pr_number }}/assignees"
 
       - name: Get PR Node ID
-        if: steps.create_pr.outputs.pr_number
+        if: steps.resolve_pr.outputs.pr_number
         id: get_pr_id
         run: |
-          PR_DATA=$(curl -s -H "Authorization: token ${{ secrets.GH_TOKEN }}" -H "Accept: application/vnd.github.v3+json" "https://api.github.com/repos/${{ github.repository }}/pulls/${{ steps.create_pr.outputs.pr_number }}")
+          PR_DATA=$(curl -s -H "Authorization: token ${{ secrets.GH_TOKEN }}" -H "Accept: application/vnd.github.v3+json" "https://api.github.com/repos/${{ github.repository }}/pulls/${{ steps.resolve_pr.outputs.pr_number }}")
           PR_ID=$(echo "$PR_DATA" | jq -r '.node_id')
           echo "node_id=$PR_ID" >> "$GITHUB_OUTPUT"
 
       - name: Enable Auto Merge for PR
-        if: steps.create_pr.outputs.pr_number
+        if: steps.resolve_pr.outputs.pr_number
         run: |
           RESPONSE=$(curl -s -X POST \
             -H "Authorization: bearer ${{ secrets.GH_TOKEN }}" \
