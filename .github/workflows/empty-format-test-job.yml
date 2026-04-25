@@ -18,7 +18,7 @@ jobs:
           token: ${{ secrets.GH_TOKEN }}
       - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
       - run: git pull
       - run: |
           npx prettier --write "**/*.{md,yaml,yml,js}" --trailing-comma all --print-width 80 --single-quote true
