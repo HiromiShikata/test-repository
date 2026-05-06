@@ -10,6 +10,13 @@ jobs:
     runs-on: ubuntu-latest
     if: github.actor != 'dependabot[bot]' && github.actor != 'renovate[bot]'
     steps:
+      - name: Generate hs-bot-gh-ap installation token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.HS_BOT_GH_AP_APP_ID }}
+          private-key: ${{ secrets.HS_BOT_GH_AP_PRIVATE_KEY }}
+
       - name: Checkout repository
         uses: actions/checkout@v6
 
@@ -23,14 +30,14 @@ jobs:
           EXISTING_PR=$(gh pr list --head "${{ steps.branch_name.outputs.branch }}" --base main --json number --jq '.[0].number // empty')
           echo "existing_pr=$EXISTING_PR" >> "$GITHUB_OUTPUT"
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
 
       - name: Create Pull Request
         id: create_pr
         if: steps.check_pr.outputs.existing_pr == ''
         uses: repo-sync/pull-request@v2
         with:
-          github_token: ${{ secrets.GH_TOKEN }}
+          github_token: ${{ steps.app-token.outputs.token }}
           destination_branch: 'main'
           source_branch: ''
           pr_title: '${{ steps.branch_name.outputs.branch }}'
@@ -48,7 +55,7 @@ jobs:
           fi
           echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
 
       - name: Assign PR to author
         if: steps.resolve_pr.outputs.pr_number
@@ -63,7 +70,7 @@ jobs:
         if: steps.resolve_pr.outputs.pr_number
         id: get_pr_id
         run: |
-          PR_DATA=$(curl -s -H "Authorization: token ${{ secrets.GH_TOKEN }}" -H "Accept: application/vnd.github.v3+json" "https://api.github.com/repos/${{ github.repository }}/pulls/${{ steps.resolve_pr.outputs.pr_number }}")
+          PR_DATA=$(curl -s -H "Authorization: token ${{ steps.app-token.outputs.token }}" -H "Accept: application/vnd.github.v3+json" "https://api.github.com/repos/${{ github.repository }}/pulls/${{ steps.resolve_pr.outputs.pr_number }}")
           PR_ID=$(echo "$PR_DATA" | jq -r '.node_id')
           echo "node_id=$PR_ID" >> "$GITHUB_OUTPUT"
 
@@ -71,7 +78,7 @@ jobs:
         if: steps.resolve_pr.outputs.pr_number
         run: |
           RESPONSE=$(curl -s -X POST \
-            -H "Authorization: bearer ${{ secrets.GH_TOKEN }}" \
+            -H "Authorization: bearer ${{ steps.app-token.outputs.token }}" \
             -H "Content-Type: application/json" \
             -d '{
               "query": "mutation($id: ID!) { enablePullRequestAutoMerge(input: { pullRequestId: $id }) { clientMutationId } }",
