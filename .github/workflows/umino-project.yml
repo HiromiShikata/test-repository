@@ -217,5 +217,6 @@ jobs:
           exclude-branches: 'release/**, dependabot/**, project-common/**, renovate/**'
           github-token: ${{ secrets.GH_TOKEN }}
           loose-matching: true
+          skip-linked-issues-check-label: ''
       - name: Get the output
         run: echo "How many linked issues? ${{ steps.check-linked-issues.outputs.linked_issues_count }}"
