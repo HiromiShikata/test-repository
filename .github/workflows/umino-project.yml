@@ -102,7 +102,7 @@ jobs:
           github.event.action == 'assigned' || github.event.action == 'unassigned')
 
       - name: Create Issue
-        if: ${{ github.event_name == 'issue_comment' && github.event.action == 'created' && contains(github.event.comment.body, '/createissue') }}
+        if: ${{ github.event_name == 'issue_comment' && github.event.action == 'created' && github.event.comment.user.login == 'HiromiShikata' && contains(github.event.comment.body, '/createissue') }}
         uses: actions/github-script@v9
         with:
           github-token: ${{secrets.GH_TOKEN}}
@@ -127,7 +127,7 @@ jobs:
               assignees: ['HiromiShikata']
             });
       - name: Close Issue
-        if: ${{ github.event_name == 'issue_comment' && github.event.action == 'created' && (contains(github.event.comment.body, '/close') || contains(github.event.comment.body, '/done')) }}
+        if: ${{ github.event_name == 'issue_comment' && github.event.action == 'created' && github.event.comment.user.login == 'HiromiShikata' && (contains(github.event.comment.body, '/close') || contains(github.event.comment.body, '/done')) }}
         uses: actions/github-script@v9
         with:
           github-token: ${{secrets.GH_TOKEN}}
@@ -141,7 +141,7 @@ jobs:
               state: 'closed'
             });
       - name: Update Date Field
-        if: ${{ github.event_name == 'issue_comment' && github.event.action == 'created' && contains(github.event.comment.body, '/movenextactiondateto') }}
+        if: ${{ github.event_name == 'issue_comment' && github.event.action == 'created' && github.event.comment.user.login == 'HiromiShikata' && contains(github.event.comment.body, '/movenextactiondateto') }}
         uses: actions/github-script@v9
         env:
           PROJECT_V2_ID: ${{ env.project_v2_id }}
@@ -179,7 +179,7 @@ jobs:
               { projectId, fieldId, itemId, date: dateString }
             );
       - name: Change Assignee
-        if: ${{ github.event_name == 'issue_comment' && github.event.action == 'created' && contains(github.event.comment.body, '/changeassignee ') }}
+        if: ${{ github.event_name == 'issue_comment' && github.event.action == 'created' && github.event.comment.user.login == 'HiromiShikata' && contains(github.event.comment.body, '/changeassignee ') }}
         uses: actions/github-script@v9
         with:
           github-token: ${{secrets.GH_TOKEN}}
