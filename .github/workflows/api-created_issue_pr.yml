@@ -15,6 +15,9 @@ jobs:
   add-to-project:
     runs-on: ubuntu-latest
     steps:
+      - uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
       - name: Add to Project
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}

@@ -44,6 +44,9 @@ jobs:
     if: (github.event_name != 'issue_comment' || github.event.comment.user.login != 'umino-bot') && github.event.action != 'labeled'
     runs-on: ubuntu-latest
     steps:
+      - uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
       - name: Move issue to ${{ env.unread }}
         uses: leonsteinhaeuser/project-beta-automations@v2.2.1
         with:
@@ -210,6 +213,9 @@ jobs:
     if: >-
       (github.event_name == 'pull_request')
     steps:
+      - uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
       - uses: nearform-actions/github-action-check-linked-issues@v1
         id: check-linked-issues
         if: github.event.pull_request.user.login != 'dependabot[bot]'

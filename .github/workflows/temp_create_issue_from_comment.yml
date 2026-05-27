@@ -18,6 +18,9 @@ jobs:
   create_issue:
     runs-on: ubuntu-latest
     steps:
+      - uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
       - run: echo "${{github.event.comment.body}}"
       - name: Create Issue
         if: ${{ github.event_name == 'issue_comment' && github.event.action == 'created' && startsWith(github.event.comment.body, '/createissue') }}

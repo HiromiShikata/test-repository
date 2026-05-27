@@ -19,6 +19,9 @@ jobs:
       pull-requests: write
       contents: read
     steps:
+      - uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
       - name: Checkout code
         uses: actions/checkout@v6
         with:
