@@ -256,7 +256,7 @@ jobs:
         if: >-
           github.event_name == 'issues' &&
           github.event.action == 'opened'
-        uses: pozil/auto-assign-issue@70adb98ca8b3941524e9ecde48e89067c4f96736
+        uses: pozil/auto-assign-issue@07fe6dc0e9771842b428f5739098d6140734e226
         with:
           assignees: HiromiShikata
           repo-token: ${{ steps.app-token.outputs.token }}
@@ -264,7 +264,7 @@ jobs:
         if: >-
           github.event_name == 'pull_request' &&
           github.event.action == 'opened'
-        uses: pozil/auto-assign-issue@70adb98ca8b3941524e9ecde48e89067c4f96736
+        uses: pozil/auto-assign-issue@07fe6dc0e9771842b428f5739098d6140734e226
         with:
           assignees: HiromiShikata
           repo-token: ${{ steps.app-token.outputs.token }}
