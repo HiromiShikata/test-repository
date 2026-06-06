@@ -1,3 +1,8 @@
+# DO NOT EDIT DIRECTLY.
+# This file is auto-synchronized from HiromiShikata/repositories-management.
+# Direct edits in downstream repositories will be overwritten by the next sync.
+# Update the source file in HiromiShikata/repositories-management instead.
+
 name: Create PR
 
 on:
@@ -10,11 +15,14 @@ jobs:
     runs-on: ubuntu-latest
     if: github.actor != 'dependabot[bot]' && github.actor != 'renovate[bot]'
     steps:
+      - uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
       - name: Generate hs-bot-gh-ap installation token
         id: app-token
         uses: actions/create-github-app-token@v3
         with:
-          app-id: ${{ secrets.HS_BOT_GH_AP_APP_ID }}
+          client-id: ${{ secrets.HS_BOT_GH_AP_CLIENT_ID }}
           private-key: ${{ secrets.HS_BOT_GH_AP_PRIVATE_KEY }}
 
       - name: Checkout repository
@@ -35,7 +43,7 @@ jobs:
       - name: Create Pull Request
         id: create_pr
         if: steps.check_pr.outputs.existing_pr == ''
-        uses: repo-sync/pull-request@v2
+        uses: repo-sync/pull-request@7e79a9f5dc3ad0ce53138f01df2fad14a04831c5
         with:
           github_token: ${{ steps.app-token.outputs.token }}
           destination_branch: 'main'
@@ -56,15 +64,6 @@ jobs:
           echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
-
-      - name: Assign PR to author
-        if: steps.resolve_pr.outputs.pr_number
-        run: |
-          curl -s -X POST \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Accept: application/vnd.github.v3+json" \
-            -d '{"assignees":["${{ github.actor }}"]}' \
-            "https://api.github.com/repos/${{ github.repository }}/issues/${{ steps.resolve_pr.outputs.pr_number }}/assignees"
 
       - name: Get PR Node ID
         if: steps.resolve_pr.outputs.pr_number

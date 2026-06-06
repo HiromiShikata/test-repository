@@ -1,3 +1,7 @@
+// DO NOT EDIT DIRECTLY.
+// This file is auto-synchronized from HiromiShikata/repositories-management.
+// Direct edits in downstream repositories will be overwritten by the next sync.
+// Update the source file in HiromiShikata/repositories-management instead.
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:base"],
@@ -10,6 +14,7 @@
   "dependencyDashboard": false,
   "branchConcurrentLimit": 2,
   "ignorePaths": ["**/generated/*", "**/_gen/*"],
+  "osvVulnerabilityAlerts": true,
   "packageRules": [
     {
       "matchPackageNames": ["eslint"],
