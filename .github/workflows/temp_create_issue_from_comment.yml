@@ -17,7 +17,9 @@ jobs:
   create_issue:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "${{github.event.comment.body}}"
+      - run: echo "$COMMENT_BODY"
+        env:
+          COMMENT_BODY: ${{ github.event.comment.body }}
       - name: Create Issue
         if: ${{ github.event_name == 'issue_comment' && github.event.action == 'created' && startsWith(github.event.comment.body, '/createissue') }}
         uses: actions/github-script@v9
@@ -55,8 +57,10 @@ jobs:
 
       - name: Update Date Field
         if: ${{ github.event_name == 'issue_comment' && github.event.action == 'created' && startsWith(github.event.comment.body, '/movenextactiondateto') }}
+        env:
+          COMMENT_BODY: ${{ github.event.comment.body }}
         run: |
-          DATE_STRING=$(echo "${{ github.event.comment.body }}" | grep -oP '(?<=/movenextactiondateto )\d{8}')
+          DATE_STRING=$(echo "$COMMENT_BODY" | grep -oP '(?<=/movenextactiondateto )\d{8}')
           OWNER=$(echo ${{ github.repository }} | cut -d '/' -f 1)
           REPO=$(echo ${{ github.repository }} | cut -d '/' -f 2)
           ITEM_ID=$(curl -X POST -H "Authorization: bearer ${{ secrets.GH_TOKEN }}" -H "Content-Type: application/json" --data '{ "query": "query { repository(owner: \"'$OWNER'\", name: \"'$REPO'\") { issue(number: '${{ github.event.issue.number }}') { projectItems(first: 10) { nodes { id } } } } }" }' https://api.github.com/graphql | jq -r '.data.repository.issue.projectItems.nodes[0].id')
