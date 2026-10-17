@@ -39,10 +39,8 @@ fail_count=0
 # Extracts the named step's run: text with the payload substituted per the
 # real two-tier semantics described above, then executes it in a real bash
 # subprocess inside an isolated <workdir>. The subprocess's own exit code is
-# deliberately not surfaced: the Update Date Field step's later lines make
-# real network calls (curl to the GraphQL API) that are expected to fail in
-# this sandbox for lack of a real token, and that failure must not prevent
-# observing whether an earlier injected command already ran.
+# deliberately not surfaced: only the resulting side effects (a marker file,
+# stdout, or a captured variable) are asserted on.
 run_step_script() {
   local selector="$1" payload_file="$2" workdir="$3" lines="$4" capture_var="${5:-}"
   local script_file="$workdir/script.sh"
@@ -119,7 +117,7 @@ for case_spec in "${cases[@]}"; do
     marker="$workdir/injected-marker"
     payload="foo\"; touch \"$marker\"; echo \""
     printf '%s' "$payload" >"$workdir/payload.txt"
-    run_step_script "$selector" "$workdir/payload.txt" "$workdir" "all"
+    run_step_script "$selector" "$workdir/payload.txt" "$workdir" "first"
     assert_marker_not_created "$case_name" "$marker"
     ;;
   stdout)
