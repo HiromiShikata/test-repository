@@ -15,6 +15,7 @@ env:
 
 jobs:
   create_issue:
+    if: ${{ contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association) }}
     runs-on: ubuntu-latest
     steps:
       - run: echo "$COMMENT_BODY"
