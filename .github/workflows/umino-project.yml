@@ -28,8 +28,6 @@ env:
   in_progress: In Progress
   user: HiromiShikata
   project_id: 48
-  project_v2_id: PVT_kwHOAGJHa84AFWnr
-  field_id: PVTF_lAHOAGJHa84AFWnrzgIk_H0
 
 jobs:
   umino-job:
@@ -38,15 +36,21 @@ jobs:
       github.actor != 'dependabot[bot]' &&
       github.actor != 'renovate[bot]' &&
       github.actor != 'app/dependabot' &&
-      github.event.action != 'labeled'
-    runs-on: ubuntu-latest
+      github.event.action != 'labeled' &&
+      (
+        (github.event_name == 'issues' &&
+         (github.event.action == 'opened' || github.event.action == 'reopened')) ||
+        (github.event_name == 'pull_request' && github.event.action == 'opened')
+      )
+    runs-on: ubuntu-slim
+    timeout-minutes: 7
     steps:
-      - uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2
+      - uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
         with:
           egress-policy: audit
       - name: Generate hs-bot-gh-ap installation token
         id: app-token
-        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         with:
           client-id: ${{ secrets.HS_BOT_GH_AP_CLIENT_ID }}
           private-key: ${{ secrets.HS_BOT_GH_AP_PRIVATE_KEY }}
@@ -55,12 +59,24 @@ jobs:
         if: >-
           github.event_name == 'issues' && github.event.issue.state == 'open' &&
           (github.event.action == 'opened' || github.event.action == 'reopened')
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         if: >-
           github.event_name == 'issues' && github.event.issue.state == 'open' &&
           (github.event.action == 'opened' || github.event.action == 'reopened')
         with:
           node-version: 24
+      - name: Select project board
+        id: board
+        run: |
+          bash scripts/project-board-selection.sh >> "$GITHUB_OUTPUT"
+        env:
+          REPOSITORY_VARIABLE_PROJECT_V2_ID: ${{ vars.PROJECT_V2_ID }}
+          REPOSITORY_VARIABLE_PROJECT_STATUS_FIELD_ID: ${{ vars.PROJECT_STATUS_FIELD_ID }}
+          REPOSITORY_VARIABLE_PROJECT_AWAITING_WORKSPACE_OPTION_ID: ${{ vars.PROJECT_AWAITING_WORKSPACE_OPTION_ID }}
+          REPOSITORY_VARIABLE_PROJECT_CLEAR_FIELD_ID: ${{ vars.PROJECT_CLEAR_FIELD_ID }}
+        if: >-
+          github.event_name == 'issues' && github.event.issue.state == 'open' &&
+          (github.event.action == 'opened' || github.event.action == 'reopened')
       - name: Move issue to ${{ env.awaiting_workspace }}
         run: |
           bash scripts/ensure-repositories-management-scripts-typescript.sh
@@ -69,9 +85,9 @@ jobs:
           npx tsx src/adapter/entry-points/cli/add-project-board-item.ts
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          PROJECT_V2_ID: ${{ env.project_v2_id }}
-          STATUS_FIELD_ID: PVTSSF_lAHOAGJHa84AFWnrzgDFcxE
-          AWAITING_WORKSPACE_OPTION_ID: d1c19cce
+          PROJECT_V2_ID: ${{ steps.board.outputs.PROJECT_V2_ID }}
+          STATUS_FIELD_ID: ${{ steps.board.outputs.STATUS_FIELD_ID }}
+          AWAITING_WORKSPACE_OPTION_ID: ${{ steps.board.outputs.AWAITING_WORKSPACE_OPTION_ID }}
           EVENT_ACTION: ${{ github.event.action }}
           ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
           PULL_REQUEST_NODE_ID: ${{ github.event.pull_request.node_id }}
@@ -79,6 +95,10 @@ jobs:
           github.event_name == 'issues' && github.event.issue.state == 'open' &&
           (github.event.action == 'opened' || github.event.action == 'reopened')
       - run: |
+          if [ -z "$CLEAR_FIELD_ID" ]; then
+            echo "The selected project board has no clear field; skipping the clear step"
+            exit 0
+          fi
           OWNER=$(echo ${{ github.repository }} | cut -d '/' -f 1)
           REPO=$(echo ${{ github.repository }} | cut -d '/' -f 2)
           ENTITY_TYPE=$(echo "$EVENT_NAME" | grep -q "pull_request" && echo "pullRequest" || echo "issue")
@@ -104,7 +124,7 @@ jobs:
             exit 1
           fi
 
-          CLEAR_FIELD_DATA="{\"query\":\"mutation { clearProjectV2ItemFieldValue(input: {projectId: \\\"${{ env.project_v2_id }}\\\", fieldId: \\\"${{ env.field_id }}\\\", itemId: \\\"$ITEM_ID\\\"}) { clientMutationId }}\"}"
+          CLEAR_FIELD_DATA="{\"query\":\"mutation { clearProjectV2ItemFieldValue(input: {projectId: \\\"$PROJECT_V2_ID\\\", fieldId: \\\"$CLEAR_FIELD_ID\\\", itemId: \\\"$ITEM_ID\\\"}) { clientMutationId }}\"}"
           CLEAR_RESPONSE=$(curl --request POST \
             --url https://api.github.com/graphql \
             --header "Authorization: Bearer $GH_PROJECT_TOKEN" \
@@ -121,6 +141,8 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
+          PROJECT_V2_ID: ${{ steps.board.outputs.PROJECT_V2_ID }}
+          CLEAR_FIELD_ID: ${{ steps.board.outputs.CLEAR_FIELD_ID }}
         if: >-
           github.event_name == 'issues' && github.event.issue.state == 'open' &&
           (github.event.action == 'opened' || github.event.action == 'reopened')
@@ -129,7 +151,7 @@ jobs:
         if: >-
           github.event_name == 'issues' &&
           github.event.action == 'opened'
-        uses: pozil/auto-assign-issue@af6beea6bdf1e8eb373f061c5bc168681fc6d011
+        uses: pozil/auto-assign-issue@d6e511896e5f1d2408e74db74416647d8ff80c8c # v4.1.0
         with:
           assignees: HiromiShikata
           repo-token: ${{ steps.app-token.outputs.token }}
@@ -137,15 +159,17 @@ jobs:
         if: >-
           github.event_name == 'pull_request' &&
           github.event.action == 'opened'
-        uses: pozil/auto-assign-issue@af6beea6bdf1e8eb373f061c5bc168681fc6d011
+        uses: pozil/auto-assign-issue@d6e511896e5f1d2408e74db74416647d8ff80c8c # v4.1.0
         with:
           assignees: HiromiShikata
           repo-token: ${{ steps.app-token.outputs.token }}
 
   check_pull_requests_to_link_issues:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
+    timeout-minutes: 7
     name: Check linked issues in pull requests
     if: >-
+      vars.PULL_REQUEST_CHECKS_IN_REPOSITORY_CI != 'true' &&
       github.repository != 'HiromiShikata/test-repository' &&
       (github.event_name == 'pull_request') &&
       (github.event.action == 'edited' ||
@@ -156,12 +180,12 @@ jobs:
       github.actor != 'app/dependabot' &&
       github.event.pull_request.user.login != 'dependabot[bot]'
     steps:
-      - uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2
+      - uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
         with:
           egress-policy: audit
       - name: Generate hs-bot-gh-ap installation token
         id: app-token
-        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         with:
           client-id: ${{ secrets.HS_BOT_GH_AP_CLIENT_ID }}
           private-key: ${{ secrets.HS_BOT_GH_AP_PRIVATE_KEY }}
@@ -170,7 +194,11 @@ jobs:
         if: >-
           github.event.pull_request.user.login != 'dependabot[bot]' &&
           github.event.pull_request.user.login != 'app/dependabot'
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          # The step below receives the owner-wide app token, so it must run base-branch code, never the pull request head.
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         if: >-
           github.event.pull_request.user.login != 'dependabot[bot]' &&
           github.event.pull_request.user.login != 'app/dependabot'
