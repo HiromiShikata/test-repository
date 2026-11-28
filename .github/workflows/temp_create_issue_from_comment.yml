@@ -13,10 +13,16 @@ env:
   project_v2_id: PVT_kwHOAGJHa84AFWnr
   field_id: PVTF_lAHOAGJHa84AFWnrzgIk_H0
 
+permissions:
+  contents: read
+
 jobs:
   create_issue:
     if: ${{ contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association) }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
     steps:
       - run: echo "$COMMENT_BODY"
         env:
